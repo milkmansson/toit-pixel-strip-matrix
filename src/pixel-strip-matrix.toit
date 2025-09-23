@@ -6,22 +6,33 @@
 import io
 import gpio
 import binary
-import font show *
 import bitmap show *
-// import bitmap show bytemap_zap
 
 import pixel-display show *
-//import pixel-display.two-color show *                // color helper
 import pixel-display.true-color show *               // color helper 
 import pixel-strip show *                            // WS2812B driver (package)
 
-import font-x11-adobe.sans-10
-import font-x11-adobe.sans-08
-import font-x11-adobe.sans-06
-import font-x11-adobe.typewriter-08
+/**
+Started with the idea of using a lookup table - but it doesn't seem to be proving too efficient.
 
-import font-tiny.tiny 
-import font-tiny.tiny-bigger-digits
+Running a new function now that calculates the pixel strip position, given an x/y from the
+driver drawing functions.
+
+Reading the WS2812 driver, it doesn't support getting a partial update - eg, just a small set of
+pixels being updated.
+
+Constructor pseudocode:
+  1. Establish connection to strip
+  2. Build an R, G and B buffer
+  3. Copy in updates
+  4. Push out buffer whenever 'draw' called 
+
+State:
+  1. xy-to-strip-map_ being commented out - seems to cause a heap crash on second or third test
+     without rebooting the ESP32.
+
+*/
+
 
 class Pixel-Strip-Matrix extends AbstractDriver:     // “TrueColor” compatible
   width_/int             := ? 
@@ -36,22 +47,16 @@ class Pixel-Strip-Matrix extends AbstractDriver:     // “TrueColor” compatib
 
 
   // A map where map[x,y] holds the *strip index* for position (x,y):
-  xy-to-strip-map_/Map := {:}
+  //xy-to-strip-map_/Map := {:}
 
-  /** Constructor pseudocode:
-  1. Establish connection to strip
-  2. Build map of xy coords to 1D strip sequence number (to accelerate writes)
-
-  */
-
-  constructor --pin/int --width/int --height/int --serpentine/bool=true:
+  constructor --pin/gpio.Pin --width/int --height/int --serpentine/bool=true:
     width_        = width
     height_       = height
     serpentine_   = serpentine
     total-length_ = height_ * width_
-    strip_ = PixelStrip.uart (width * height) --pin=(gpio.Pin pin) --bytes-per-pixel=3
-    build-xy-map_
+    strip_ = PixelStrip.uart (width * height) --pin=pin --bytes-per-pixel=3
     build-buffer_
+    //build-xy-map_
 
   height -> int:       return height_
   width -> int:        return width_
@@ -60,24 +65,25 @@ class Pixel-Strip-Matrix extends AbstractDriver:     // “TrueColor” compatib
   height value/int -> none:
     height_ = value
     total-length_ = height_ * width_
-    build-xy-map_
     build-buffer_
+    //build-xy-map_
 
   width value/int -> none:
     width_ = value
     total-length_ = height_ * width_
-    build-xy-map_
     build-buffer_
+    //build-xy-map_
 
   serpentine value/bool -> none:
     serpentine_ = value
-    build-xy-map_
+    //build-xy-map_
 
   build-buffer_ -> none:
     red-array   = ByteArray total-length_
     green-array = ByteArray total-length_
     blue-array  = ByteArray total-length_
 
+  /*
   // Map keyed with x & y packed into 64 bit key
   pack x y -> int:
     return ((x & 0xFFFFFFFF) << 32) | (y & 0xFFFFFFFF)
@@ -95,6 +101,7 @@ class Pixel-Strip-Matrix extends AbstractDriver:     // “TrueColor” compatib
         for y := 0; y <= height_ - 1; y += 1:
           xy-to-strip-map_[pack x y] = counter
           counter += 1
+  */
 
   // led index for (x,y)
   compute-index x y -> int:
@@ -129,72 +136,3 @@ class Pixel-Strip-Matrix extends AbstractDriver:     // “TrueColor” compatib
 
     strip_.output red-array green-array blue-array
     sleep --ms=2
-
-main:
-  strip-pin := 17
-  gpio-pin  := gpio.Pin 17
-
-  PIXELS    := 8 * 32
-  strip  := PixelStrip.uart (8 * 32) --pin=gpio-pin
-
-  r := ByteArray PIXELS
-  g := ByteArray PIXELS
-  b := ByteArray PIXELS
-
-  // Paint all pixels with #4480ff.
-  for i := 0; i <= 10; i += 1:
-    r[i] = 0x44
-    g[i] = 0x80
-    b[i] = 0xff
-  
-  strip.output r g b
-  sleep --ms=500
-
-  r.fill 0x00
-  g.fill 0x00
-  b.fill 0x00
-
-  strip.output r g b
-  gpio-pin.close
-
-  // Here we don't really need it, but in tight animation loops you must
-  // occasionally sleep, to avoid triggering the watchdog.
-  //sleep --ms=1
-
-
-  // --pin=17  // Output pin - this is the normal pin for UART 2.
-
-  pixel-matrix   := Pixel-Strip-Matrix --pin=17 --height=8 --width=64
-  pixel-display  := PixelDisplay.true-color pixel-matrix
-  pixel-display.background = BLACK
-  pixel-display.draw
-
-  //SANS-10 ::= Font [sans-10.ASCII, sans-10.LATIN-1-SUPPLEMENT]
-  //SANS-08 ::= Font [sans-08.ASCII, sans-08.LATIN-1-SUPPLEMENT]
-  //SANS-06 ::= Font [sans-06.ASCII, sans-06.LATIN-1-SUPPLEMENT]
-
-  TYPEWRITER-08 ::= Font [typewriter-08.ASCII, typewriter-08.LATIN-1-SUPPLEMENT]
-  //TINY-08 ::= Font [font-tiny.ASCII, font-tiny.LATIN-1-SUPPLEMENT]
-
-
-  sans := TYPEWRITER-08
-  [
-    Label --x=0 --y=08 --id="time",
-    //Label --x=0 --y=8 --id="date"
-  ].do: pixel-display.add it
-
-  STYLE ::= Style
-      --type-map={
-          "label": Style --font=sans --color=WHITE,
-      }
-  pixel-display.set-styles [STYLE]
-
-  //date/Label := pixel-display.get-element-by-id "date"
-  time/Label := pixel-display.get-element-by-id "time"
-  
-  while true:
-    time.text     = "$(%02d Time.now.local.h):$(%02d Time.now.local.m):$(%02d Time.now.local.s)"
-    //date.text     = "$(Time.now.local.year)-$(%02d Time.now.local.month)-$(%02d Time.now.local.day)  -" 
-
-    pixel-display.draw
-    sleep --ms=30000
