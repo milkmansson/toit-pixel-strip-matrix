@@ -9,7 +9,7 @@ import font show *
 import bitmap show *
 
 import pixel-display show *
-import pixel-display.true-color show *               // color helper 
+import pixel-display.true-color show *               // color helper
 import pixel-strip show *                            // WS2812B driver (package)
 
 import font-x11-adobe.sans-10
@@ -17,47 +17,19 @@ import font-x11-adobe.sans-08
 import font-x11-adobe.sans-06
 import font-x11-adobe.typewriter-08
 
-import font-tiny.tiny 
+import font-tiny.tiny
 import font-tiny.tiny-bigger-digits
 
 import ..src.pixel-strip-matrix as pixel-strip-matrix
 
 
 PIXELS-HEIGHT  ::= 8
-PIXELS-WIDTH   ::= 32
+PIXELS-WIDTH   ::= 38
 
 
 main:
-  strip-pin    := 17
-  gpio-pin     := gpio.Pin 17
-  total-pixels := (PIXELS-HEIGHT * PIXELS-WIDTH)
-  strip        := PixelStrip.uart total-pixels --pin=gpio-pin
-
-  r := ByteArray total-pixels
-  g := ByteArray total-pixels
-  b := ByteArray total-pixels
-
-  // TEST: Paint some pixels with #4480ff, To verify correctly operating
-
-  for i := 0; i <= 10; i += 1:
-    r[i] = 0x44
-    g[i] = 0x80
-    b[i] = 0xff
-  
-  strip.output r g b
-  sleep --ms=500
-
-  r.fill 0x00
-  g.fill 0x00
-  b.fill 0x00
-
-  strip.output r g b
-  gpio-pin.close
-
-
-  // STRIP now verified, start with the display driver
-
-  pixel-matrix   := pixel-strip-matrix.Pixel-Strip-Matrix --pin=gpio-pin --height=PIXELS-HEIGHT --width=PIXELS-WIDTH
+  strip-pin := 7
+  pixel-matrix   := pixel-strip-matrix.PixelStripMatrix --pin=strip-pin --height=PIXELS-HEIGHT --width=PIXELS-WIDTH
   pixel-display  := PixelDisplay.true-color pixel-matrix
   pixel-display.background = BLACK
   pixel-display.draw
@@ -84,10 +56,10 @@ main:
 
   //date/Label := pixel-display.get-element-by-id "date"
   time/Label := pixel-display.get-element-by-id "time"
-  
+
   while true:
     time.text     = "$(%02d Time.now.local.h):$(%02d Time.now.local.m):$(%02d Time.now.local.s)"
-    //date.text     = "$(Time.now.local.year)-$(%02d Time.now.local.month)-$(%02d Time.now.local.day)  -" 
+    //date.text     = "$(Time.now.local.year)-$(%02d Time.now.local.month)-$(%02d Time.now.local.day)  -"
 
     pixel-display.draw
     sleep --ms=30000

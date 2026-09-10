@@ -1,6 +1,9 @@
 ## For more: https://github.com/github/gitignore
 
-## Toit 
+## Backups
+.backups/
+
+## Toit
 .packages/
 .jaguar
 
@@ -12,7 +15,7 @@
 .classpath
 .settings/
 
-## OS Junk 
+## OS Junk
 # macOS
 .DS_Store
 .AppleDouble
@@ -29,4 +32,3 @@ $RECYCLE.BIN/
 ## Environment & Secrets
 .env
 .env.*
-
