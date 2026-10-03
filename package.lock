@@ -1,0 +1,50 @@
+sdk: ^2.0.0-alpha.188
+prefixes:
+  color_tft: toit-color-tft
+  e-paper: toit-e-paper
+  font_tiny: pkg-font-tiny
+  font_x11_adobe: pkg-font-x11-adobe
+  pixel_display: toit-pixel-display
+  pixel_strip: toit-pixel-strip
+packages:
+  pkg-font-tiny:
+    url: github.com/toitlang/pkg-font-tiny
+    name: font_tiny
+    version: 0.1.0
+    hash: 1506cad47ee738f8a9145885abb5fa0be918b2b5
+  pkg-font-x11-adobe:
+    url: github.com/toitlang/pkg-font-x11-adobe
+    name: font_x11_adobe
+    version: 0.1.0
+    hash: f844400722165252148f087cdf189abab0a47f3d
+  toit-color-tft:
+    url: github.com/toitware/toit-color-tft
+    name: color_tft
+    version: 2.1.0
+    hash: 8ae2796488705df1fc63c21a3ff435c942de6935
+    prefixes:
+      pixel_display: toit-pixel-display
+  toit-e-paper:
+    url: github.com/toitware/toit-e-paper
+    name: e-paper
+    version: 1.2.0
+    hash: 0013bab49f1e78b7f9a5d6226a8bb6ce398d790c
+    prefixes:
+      pixel_display: toit-pixel-display
+  toit-pixel-display:
+    url: github.com/toitware/toit-pixel-display
+    name: pixel_display
+    version: 2.11.0
+    hash: 59a4be9f0e6aa2321c6a032da44776f59af364b5
+    prefixes:
+      png-tools: toit-png-tools
+  toit-pixel-strip:
+    url: github.com/toitware/toit-pixel-strip
+    name: pixel_strip
+    version: 1.3.0
+    hash: 4e7a6027bf6da42a56f052abe8cf33b8b834be55
+  toit-png-tools:
+    url: github.com/toitware/toit-png-tools
+    name: png-tools
+    version: 1.0.0
+    hash: ee472ac9d4333a138206f9d3a817d3c5432d6f87
