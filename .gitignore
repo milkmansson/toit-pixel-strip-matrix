@@ -2,6 +2,7 @@
 
 ## Backups
 .backups/
+.backup/
 
 ## Toit
 .packages/
